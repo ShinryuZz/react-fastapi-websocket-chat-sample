@@ -2,16 +2,13 @@ import React, { useState, useEffect } from "react";
 import "./App.css";
 
 function App() {
-  const [clientId, setClientId] = useState(
+  const [clientId, setClienId] = useState(
     Math.floor(new Date().getTime() / 1000)
   );
 
-  // const [chatHistory, setChatHistory] = useState([]);
-  // const [isOnline, setIsOnline] = useState(false);
-  // const [textValue, setTextValue] = useState("");
-  const [websocket, setWebsocket] = useState();
+  const [websckt, setWebsckt] = useState();
 
-  const [message, setMessage] = useState([]);
+  const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([]);
 
   useEffect(() => {
@@ -22,23 +19,25 @@ function App() {
       ws.send("Connect");
     };
 
+    // recieve message every start page
     ws.onmessage = (e) => {
       const message = JSON.parse(e.data);
       setMessages([...messages, message]);
     };
 
-    setWebsocket(ws);
+    setWebsckt(ws);
+    //clean up function when we close page
     return () => ws.close();
-  }, [message, messages]);
+  }, []);
 
   const sendMessage = () => {
-    websocket.send(message);
-    websocket.onmessage = (e) => {
+    websckt.send(message);
+    // recieve message every send message
+    websckt.onmessage = (e) => {
       const message = JSON.parse(e.data);
-      setMessage([...messages, message]);
+      setMessages([...messages, message]);
     };
-
-    setMessage([]);
+    setMessage("");
   };
 
   return (
@@ -76,7 +75,7 @@ function App() {
             placeholder="Chat message ..."
             onChange={(e) => setMessage(e.target.value)}
             value={message}
-          />
+          ></input>
           <button className="submit-chat" onClick={sendMessage}>
             Send
           </button>

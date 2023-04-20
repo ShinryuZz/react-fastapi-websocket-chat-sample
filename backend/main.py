@@ -1,19 +1,21 @@
+
+from typing import List
+
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
-# from ConnectionManager import *
 from datetime import datetime
 import json
-from typing import List
 
 app = FastAPI()
 
 app.add_middleware(
-    CORSMiddleware, 
-    allow_origins=["*"],
+    CORSMiddleware,
+    allow_origins=["*"], 
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 class ConnectionManager:
     def __init__(self):
@@ -33,30 +35,28 @@ class ConnectionManager:
         for connection in self.active_connections:
             await connection.send_text(message)
 
+
 manager = ConnectionManager()
 
+
 @app.get("/")
-def home():
+async def get():
     return "Welcome Home"
 
 
 @app.websocket("/ws/{client_id}")
-async def websocket_endpoint(websocket : WebSocket, cliend_id: int):
+async def websocket_endpoint(websocket: WebSocket, client_id: int):
     await manager.connect(websocket)
     now = datetime.now()
     current_time = now.strftime("%H:%M")
     try:
         while True:
             data = await websocket.receive_text()
-            message = {"time": current_time, "client_id": cliend_id, "message" : data}
+            # await manager.send_personal_message(f"You wrote: {data}", websocket)
+            message = {"time":current_time,"clientId":client_id,"message":data}
             await manager.broadcast(json.dumps(message))
-
-    except WebSocketDisconnect: 
+            
+    except WebSocketDisconnect:
         manager.disconnect(websocket)
-        message = {"time": current_time, "client_id": cliend_id, "message": "Offline"}
+        message = {"time":current_time,"clientId":client_id,"message":"Offline"}
         await manager.broadcast(json.dumps(message))
-
-
-
-
-
